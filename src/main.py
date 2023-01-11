@@ -31,9 +31,9 @@ config = {
 'cnn_vects_path':'cached_cnn_vects_2'}
 
 
-def summarize(input_video):
+def summarize(input_video, out_dir):
     t1 = time.time()
-    video = InputVideo(input_video,config,resize = True)
+    video = InputVideo(input_video,out_dir,config,resize = True)
     print("Processing Video: {}".format(video.getVideoName()))
     print("######################################################")
     sampled_video = video.getSampledInputVideo(config['sampling_rate'])
@@ -57,7 +57,8 @@ def summarize(input_video):
 
 if __name__ == '__main__':
     input_video = sys.argv[1] if len(sys.argv) > 1 else None
+    out_dir = sys.argv[2]
     if(input_video != None):
-        summarize(input_video)
+        summarize(input_video, out_dir)
     else:
         print("Missing Video Path Argument")

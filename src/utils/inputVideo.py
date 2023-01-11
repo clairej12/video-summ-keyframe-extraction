@@ -14,12 +14,15 @@ import numpy as np
 import shutil
 import time
 import multiprocessing
+import pdb
 
 class InputVideo:
 
-    def __init__(self,path,config,resize = False):
+    def __init__(self,path,out_dir,config,resize = False):
         self.path = path
         self.video = cv.VideoCapture(path)
+        self.out_dir = out_dir
+        # pdb.set_trace()
         if(self.video.isOpened() == False):
             raise Exception('Error while opening video {}'.format(path))
         else:
@@ -35,7 +38,8 @@ class InputVideo:
             self.keras_model = None
             self.dr_model = None
             self.i2v = None
-            self.summarization_data_path = self.path[0:self.path.index('.')]
+            # pdb.set_trace()
+            self.summarization_data_path = out_dir # self.path[0:self.path.index('.')]
             self.config = config
             self.resize = resize
             self.getFrameList()
@@ -50,6 +54,7 @@ class InputVideo:
         return self.path.split('/')[-1]
 
     def getFrameList(self):
+        # pdb.set_trace()
         if(len(self.frame_list) == 0):
             t1 = time.time()
             ret, frame = self.video.read()
@@ -193,12 +198,13 @@ class InputVideo:
         self.setNextFrameIndex(0)
 
     def getSampledInputVideo(self, fps):
+        # pdb.set_trace()
         frame_list = self.getSampledFrameList(fps)
-        name = '{}_{}.{}'.format(self.path.split('.')[0], fps, self.path.split('.')[1])
+        name = self.out_dir+'{}_{}.{}'.format(self.path.split('.')[0], fps, self.path.split('.')[1])
         width = self.config['width'] if self.resize else self.FRAME_WIDTH
         height = self.config['height'] if self.resize else self.FRAME_HEIGHT
         outputVideo.writeVideoToPath(frame_list, name, fps, width,height)
-        return InputVideo(name,self.config)
+        return InputVideo(name,self.out_dir,self.config)
 
     def getPairwiseFrameTupleList(self, external_list=None):
         # Use unified List
@@ -329,12 +335,15 @@ class InputVideo:
         return scene_pair_list
 
     def writeAndGetScenes(self, scene_boundaries_list):
+        pdb.set_trace()
         import src.utils.scene as scene
         scenes_list = []
         scenes_folder_path = self.summarization_data_path + '/scenes'
-        os.makedirs(scenes_folder_path)
+        if not os.path.exists(scenes_folder_path):
+            os.makedirs(scenes_folder_path)
         kfs_per_scene_path = self.summarization_data_path + '/kfs_per_scene'
-        os.makedirs(kfs_per_scene_path)
+        if not os.path.exists(kfs_per_scene_path):
+            os.makedirs(kfs_per_scene_path)
 
         for i, scene_boundaries in enumerate(scene_boundaries_list):
             scene_path = '{}/{}.{}'.format(scenes_folder_path, i, self.path.split('.')[1])
@@ -382,7 +391,8 @@ class InputVideo:
             kfs += v
 
         before_path = self.summarization_data_path + '/kfs_before'
-        os.makedirs(before_path)
+        if not os.path.exists(before_path):
+            os.makedirs(before_path)
         for i, kf in enumerate(kfs):
             cv.imwrite('{}/{}.jpg'.format(before_path, i), kf.image)
 
@@ -391,7 +401,8 @@ class InputVideo:
             feature_vectors = [feature_vectors[kf.index] for kf in kfs]
             final_kfs = self.finalKeyframeDuplicateRemoval(kfs, self.config['global_removal_thresh'],feature_vectors)
             after_path = self.summarization_data_path + '/kfs_after'
-            os.makedirs(after_path)
+            if not os.path.exists(after_path):
+                os.makedirs(after_path)
             for i, kf in enumerate(final_kfs):
                 cv.imwrite('{}/{}.jpg'.format(after_path, i), kf.image)
             return final_kfs
