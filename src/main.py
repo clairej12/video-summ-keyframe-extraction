@@ -12,7 +12,7 @@ import time
 config = {
 'width':299,
 'height':299,
-'sampling_rate':3,
+'sampling_rate':1,
 'use_cached_cnn':False,
 'cnn_params':{'model':'keras'},
 'use_multiprocessing':True,
@@ -30,6 +30,7 @@ config = {
 'scene_based_removal_thresh':0.8,
 'cnn_vects_path':'cached_cnn_vects_2'}
 
+# TODO:
 # downsample to 1 frame per second
 # testing set: videos 21 to 29
 
