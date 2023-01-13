@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.dirname(__file__).replace('src', '', 1))
+# sys.path.append(os.path.dirname(__file__).replace('src', '', 1))
 import src.utils.smooth as smooth
 from src.utils.bow.vbow import BOV
 import src.utils.localFeatures as local
@@ -15,6 +15,17 @@ import shutil
 import time
 import multiprocessing
 import pdb
+
+def clearDir(folder):
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 class InputVideo:
 
@@ -43,8 +54,11 @@ class InputVideo:
             self.config = config
             self.resize = resize
             self.getFrameList()
-            if os.path.exists(self.summarization_data_path):
-                shutil.rmtree(self.summarization_data_path)  # Remove the old summarization data storage
+            if not os.path.exists(self.summarization_data_path):
+                os.makedirs(self.summarization_data_path)
+            # if os.path.exists(self.summarization_data_path):
+            #     clearDir(self.summarization_data_path)
+                # shutil.rmtree(self.summarization_data_path)  # Remove the old summarization data storage
 
     def reInit(self):
         self.video.release()
@@ -200,7 +214,8 @@ class InputVideo:
     def getSampledInputVideo(self, fps):
         # pdb.set_trace()
         frame_list = self.getSampledFrameList(fps)
-        name = self.out_dir+'{}_{}.{}'.format(self.path.split('.')[0], fps, self.path.split('.')[1])
+        vidname = self.getVideoName()
+        name = self.out_dir+'/{}_{}.{}'.format(vidname.split('.')[0],fps,vidname.split('.')[1]) #'{}_{}.{}'.format(self.path.split('.')[0], fps, self.path.split('.')[1])
         width = self.config['width'] if self.resize else self.FRAME_WIDTH
         height = self.config['height'] if self.resize else self.FRAME_HEIGHT
         outputVideo.writeVideoToPath(frame_list, name, fps, width,height)
@@ -335,7 +350,7 @@ class InputVideo:
         return scene_pair_list
 
     def writeAndGetScenes(self, scene_boundaries_list):
-        pdb.set_trace()
+        # pdb.set_trace()
         import src.utils.scene as scene
         scenes_list = []
         scenes_folder_path = self.summarization_data_path + '/scenes'
@@ -348,12 +363,14 @@ class InputVideo:
         for i, scene_boundaries in enumerate(scene_boundaries_list):
             scene_path = '{}/{}.{}'.format(scenes_folder_path, i, self.path.split('.')[1])
             scene_kf_path = '{}/{}'.format(kfs_per_scene_path,i)
-            os.makedirs(scene_kf_path)
-            outputVideo.writeVideoToPath(self.getFrameList(
-            )[scene_boundaries[0] + 1:scene_boundaries[1] + 1], scene_path, self.getFrameRate(), self.FRAME_WIDTH, self.FRAME_HEIGHT)
-            scenes_list.append(scene.Scene(scene_path, starting_index=scene_boundaries[0] + 1, ending_index=scene_boundaries[1],
-                                           diff_list_dict=self.diff_list_dict, scene_id=i, keras_model=self.keras_model,
-                                            dr_model=self.dr_model,scene_kf_path=scene_kf_path,config=self.config))
+            os.makedirs(scene_kf_path, exist_ok = True)
+            outputVideo.writeVideoToPath(
+                self.getFrameList()[scene_boundaries[0] + 1:scene_boundaries[1] + 1], 
+                scene_path, self.getFrameRate(), self.FRAME_WIDTH, self.FRAME_HEIGHT)
+            scenes_list.append(scene.Scene(
+                scene_path, starting_index=scene_boundaries[0] + 1, ending_index=scene_boundaries[1],
+                diff_list_dict=self.diff_list_dict, scene_id=i, keras_model=self.keras_model,
+                dr_model=self.dr_model,scene_kf_path=scene_kf_path,config=self.config))
 
         for i, scene in enumerate(scenes_list[:-1]):
             scenes_list[i].nextScene = scenes_list[i + 1]
@@ -375,8 +392,11 @@ class InputVideo:
             return kfs
 
     def generateKeyframes_multiprocessing(self):
-        scene_list = self.writeAndGetScenes(self.getSceneBoundariesFromThreshCut(
-            self.config['scene_cut_features'],self.config['scene_cut_features_params'], self.config['min_scene_length']))
+        scene_list = self.writeAndGetScenes(
+            self.getSceneBoundariesFromThreshCut(
+            self.config['scene_cut_features'],
+            self.config['scene_cut_features_params'], 
+            self.config['min_scene_length']))
         processes = []
         manager = multiprocessing.Manager()
         return_dict = manager.dict()

@@ -30,6 +30,8 @@ config = {
 'scene_based_removal_thresh':0.8,
 'cnn_vects_path':'cached_cnn_vects_2'}
 
+# downsample to 1 frame per second
+# testing set: videos 21 to 29
 
 def summarize(input_video, out_dir):
     t1 = time.time()

@@ -16,11 +16,13 @@ from pyclustering.utils import read_sample
 from pyclustering.samples.definitions import FCPS_SAMPLES
 from pyclustering.utils import distance_metric
 from pyclustering.utils import calculate_distance_matrix
+import pdb
 
 class Scene(src.utils.inputVideo.InputVideo):
     #Has all Input video functionality , scene specific functionality to be added
     def __init__(self,path,starting_index,ending_index,diff_list_dict,scene_id,keras_model,dr_model,scene_kf_path,config):
-        super().__init__(path,config)
+        # pdb.set_trace()
+        super().__init__(path,scene_kf_path,config)
         """
         Starting Index : Starting frame index relative to the original Video
         Ending Index : Ending frame index relative to the original Video
