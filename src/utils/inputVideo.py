@@ -386,6 +386,7 @@ class InputVideo:
             kfs = scene.extractKeyFramesByKMeans(method=self.config['scene_processing_features'], params=self.config['scene_processing_features_params'])
         else:
             kfs = scene.clusterSceneKMedoid(method='cnn', params={'model': 'keras'})
+        os.remove(scene.path)
         if(proc_num != None):
             return_dict[proc_num] = kfs
         else:
@@ -406,6 +407,8 @@ class InputVideo:
             p.start()
         for process in processes:
             process.join()
+        # for scene in scene_list:
+        #     os.remove(scene.path)
         kfs = []
         for k, v in sorted(return_dict.items()):
             kfs += v
@@ -435,6 +438,8 @@ class InputVideo:
             self.config['scene_cut_features'],self.config['scene_cut_features_params'], self.config['min_scene_length']))
         for scene in scene_list:
             kfs += self.extractKeyframesFromScene(scene)
+        # for scene in scene_list:
+        #     os.remove(scene.path)
 
         before_path = self.summarization_data_path + '/kfs_before'
         os.makedirs(before_path)

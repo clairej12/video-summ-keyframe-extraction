@@ -8,6 +8,7 @@ import shutil
 import time
 import cv2 as cv
 import time
+import pdb
 
 config = {
 'width':299,
@@ -30,7 +31,7 @@ config = {
 'scene_based_removal_thresh':0.8,
 'cnn_vects_path':'cached_cnn_vects_2'}
 
-# TODO:
+# Important:
 # downsample to 1 frame per second
 # testing set: videos 21 to 29
 
@@ -52,6 +53,10 @@ def summarize(input_video, out_dir):
     os.makedirs(kf_path)
     for i, kf in enumerate(kfs):
         cv.imwrite('{}/{}.jpg'.format(kf_path, i), kf.image)
+    # pdb.set_trace()
+    out_file=open(out_dir+f"/frame_indices_keyframe_extraction_{config['sampling_rate']}.txt",'w')
+    for kf in kfs:
+        out_file.write(str(kf.index)+'\n')
     print("Formatted length in seconds: {}".format(video.getFormattedVideoLenghtInSeconds()))
     print("Time: {}".format(time.time() - t1))
     kfs.sort(key = lambda k: k.index)
